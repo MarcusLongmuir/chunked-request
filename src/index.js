@@ -42,8 +42,10 @@ export default function chunkedRequest(options) {
   }
 
   function processRawComplete(rawComplete) {
-    // Call the parser with isFinalChunk=true to flush the suffix
-    processRawChunk("", true);
+    if( prevChunkSuffix != "") {
+      // Call the parser with isFinalChunk=true to flush the prevChunkSuffix
+      processRawChunk("", true);
+    }
     onComplete(rawComplete);
   }
 

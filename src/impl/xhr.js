@@ -1,3 +1,5 @@
+import { parseResponseHeaders } from '../polyfill/Headers';
+
 export const XHR = 'xhr';
 
 export default function xhrRequest(options) {
@@ -21,6 +23,12 @@ export default function xhrRequest(options) {
     });
   }
 
+  function onStateChange() {
+    if(this.readyState == this.HEADERS_RECEIVED) {
+      options.onRawHeaders(parseResponseHeaders(this.getAllResponseHeaders()), this.status);
+    }
+  }
+
   function onError(err) {
     options.onRawComplete({
       statusCode: 0,
@@ -39,6 +47,7 @@ export default function xhrRequest(options) {
   if (options.credentials === 'include') {
     xhr.withCredentials = true;
   }
+  xhr.addEventListener('readystatechange', onStateChange);
   xhr.addEventListener('progress', onProgressEvent);
   xhr.addEventListener('loadend', onLoadEvent);
   xhr.addEventListener('error', onError);

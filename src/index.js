@@ -15,6 +15,7 @@ export default function chunkedRequest(options) {
     method = 'GET',
     body,
     credentials = 'same-origin',
+    onHeaders = noop,
     onComplete = noop,
     onChunk = noop,
     chunkParser = defaultChunkParser
@@ -24,6 +25,10 @@ export default function chunkedRequest(options) {
   // defaultChunkParser uses it to keep track of any trailing text the last
   // delimiter in the chunk.  There is no contract for parserState.
   let parserState;
+
+  function processRawHeaders(headers, status) {
+    onHeaders(headers, status);
+  }
 
   function processRawChunk(chunkBytes, flush = false) {
     let parsedChunks = null;
@@ -61,6 +66,7 @@ export default function chunkedRequest(options) {
     method,
     body,
     credentials,
+    onRawHeaders: processRawHeaders,
     onRawChunk: processRawChunk,
     onRawComplete: processRawComplete
   });
@@ -77,6 +83,7 @@ function validateOptions(o) {
 
   // Optional.
   if (o.onComplete && typeof o.onComplete !== 'function') throw new Error('Invalid options.onComplete value');
+  if (o.onHeaders && typeof o.onHeaders !== 'function') throw new Error('Invalid options.onHeaders value');
   if (o.onChunk && typeof o.onChunk !== 'function') throw new Error('Invalid options.onChunk value');
   if (o.chunkParser && typeof o.chunkParser !== 'function') throw new Error('Invalid options.chunkParser value');
 }

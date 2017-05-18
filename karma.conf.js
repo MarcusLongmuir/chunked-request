@@ -78,6 +78,7 @@ module.exports = function(config) {
     ],
 
     proxies: {
+      '/single-response': 'http://localhost:2001/single-response',
       '/chunked-response': 'http://localhost:2001/chunked-response',
       '/chunked-utf8-response': 'http://localhost:2001/chunked-utf8-response',
       '/split-chunked-response': 'http://localhost:2001/split-chunked-response',

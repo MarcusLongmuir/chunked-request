@@ -2,6 +2,7 @@ import chunkedRequest from '../../src/index';
 import isEqual from 'lodash/isEqual';
 import isObject from 'lodash/isObject';
 import { BrowserHeaders } from 'browser-headers';
+import singleResponseParser from "../../src/singleResponseParser";
 
 // These integration tests run through Karma; check `karma.conf.js` for
 // configuration.  Note that the dev-server which provides the `/chunked-response`
@@ -32,6 +33,36 @@ describe('chunked-request', () => {
     chunkedRequest({
       url: `/chunked-response?numChunks=1&entriesPerChunk=1&delimitLast=1`,
       onChunk: (err, chunk) => receivedChunks.push(err || chunk),
+      onHeaders,
+      onComplete,
+    });
+  });
+
+  it('should parse a response that is a single object split across multiple lines', done => {
+    const receivedChunks = [];
+
+    let onHeadersCalled = false;
+    const onHeaders = (headers, status) => {
+      expect(status).toBe(200, 'status 200');
+      expect(isEqual(headers.get("my-header"), ["My-Header-Value"])).toBe(true, 'received headers');
+      onHeadersCalled = true;
+    };
+
+    const onComplete = () => {
+      const chunkErrors = receivedChunks.filter(v => v instanceof Error);
+
+      expect(onHeadersCalled).toBe(true);
+      expect(receivedChunks.length).toBe(1, 'receivedChunks');
+      expect(chunkErrors.length).toBe(0, 'of which errors');
+      expect(isEqual(receivedChunks, [ [ {outer: {inner: [1,2,3]}} ] ])).toBe(true, 'parsed chunks');
+
+      done();
+    };
+
+    chunkedRequest({
+      url: `/single-response`,
+      onChunk: (err, chunk) => receivedChunks.push(err || chunk),
+      chunkParser: singleResponseParser,
       onHeaders,
       onComplete,
     });

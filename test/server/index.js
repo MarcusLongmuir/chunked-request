@@ -73,6 +73,21 @@ function serveChunkedUtf8Response(req, res) {
   res.end();
 }
 
+function serveSingleResponse(req, res) {
+  res.setHeader('Content-Type', 'text/html; charset=UTF-8');
+  res.setHeader('Transfer-Encoding', 'chunked');
+  res.setHeader('My-Header', 'My-Header-Value');
+
+  const response = {
+    "outer": {
+      "inner": [1, 2, 3]
+    }
+  };
+
+  res.write(JSON.stringify(response, null, 2));
+  res.end();
+}
+
 function serveChunkedResponse(req, res) {
   const query = url.parse(req.url, true).query;
   const numChunks = parseInt(query.numChunks, 10) || 4;
@@ -114,6 +129,8 @@ function handler(req, res) {
   req.parsedUrl = url.parse(req.url, true);
 
   switch (req.parsedUrl.pathname) {
+  case '/single-response':
+    return serveSingleResponse(req, res);
   case '/chunked-response':
     return serveChunkedResponse(req, res);
   case '/chunked-utf8-response':
